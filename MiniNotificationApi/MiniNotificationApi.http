@@ -1,0 +1,6 @@
+@MiniNotificationApi_HostAddress = http://localhost:5211
+
+GET {{MiniNotificationApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
