@@ -3,42 +3,39 @@
 ## Overview
 
 Mini Notification Gateway is a simple notification sending system
-implemented with C# and .NET 9.
+developed using C# and .NET 9.
 
-The purpose of this project is to demonstrate software design
-principles, SOLID principles, Dependency Injection and Design Patterns
-by creating a notification system that supports multiple providers and
-automatic failover.
+The project demonstrates the usage of:
 
-------------------------------------------------------------------------
+-   Dependency Injection
+-   Interface-based programming
+-   SOLID principles
+-   Design Patterns
 
-# Features
-
--   Create notification messages
--   Send notifications through multiple providers
--   Automatic provider failover
--   Provider abstraction using interfaces
--   Event logging system
--   Message status management
--   Extensible architecture
+The system supports multiple notification providers and automatically
+switches to another provider when the current provider fails.
 
 ------------------------------------------------------------------------
 
-# Notification Flow
+# Project Flow
 
-    Create Message
-
-            ↓
-
-    Select Provider
+    Create Notification
 
             ↓
 
-    Send Message
+    Select Available Provider
 
             ↓
 
-    Update Status
+    Send Notification
+
+            ↓
+
+    If Failed
+
+            ↓
+
+    Try Next Provider
 
             ↓
 
@@ -46,60 +43,74 @@ automatic failover.
 
 ------------------------------------------------------------------------
 
-# Architecture
+# Main Components
 
-The system is based on interface-driven design.
+## INotificationProvider
 
-Main components:
+This interface defines the contract for notification providers.
 
-## Notification Providers
-
-Interface:
-
-    INotificationProvider
-
-Implementations:
+Implemented providers:
 
     NotificationProviderA
     NotificationProviderB
     NotificationProviderC
 
-Each provider contains its own sending logic.
+Each provider contains its own sending behavior.
+
+Structure:
+
+    INotificationProvider
+
+              |
+     ----------------------
+     |          |          |
+    ProviderA ProviderB ProviderC
 
 ------------------------------------------------------------------------
 
-## Notification Sender
+## NotificationSender
 
-Interface:
+`NotificationSender` controls the notification sending process.
 
-    INotificationSender
+Responsibilities:
 
-Responsible for:
-
--   Selecting providers
--   Sending messages
+-   Receiving available providers
+-   Trying providers one by one
 -   Handling provider failures
--   Managing failover process
+-   Logging sending results
+
+It works with:
+
+    IEnumerable<INotificationProvider>
+
+instead of depending on a concrete provider.
 
 ------------------------------------------------------------------------
 
 ## Logging System
 
-Interface:
+Logging is implemented using:
 
     IContentLogger
 
-Implementation:
+with:
 
     ContentLogger
 
-The logger records system events such as:
+The logger receives events from the sending process and forwards them to
+logger providers.
 
--   MessageCreated
--   ProviderSelected
--   MessageSent
--   MessageFailed
--   ProviderChanged
+Structure:
+
+    IContentLogger
+
+            |
+
+    ContentLogger
+
+            |
+
+    IContentLoggerProvider
 
 ------------------------------------------------------------------------
 
@@ -113,86 +124,58 @@ All providers implement:
 
     INotificationProvider
 
-Structure:
+The sender does not know the internal implementation of providers.
 
-    INotificationProvider
-
-            |
-     -----------------------
-     |          |           |
-    ProviderA ProviderB ProviderC
-
-The sender works with the interface and does not depend on a specific
-provider.
+Adding a new provider only requires creating another implementation.
 
 Benefits:
 
--   Adding new providers without modifying existing code
--   Removing large if/else or switch statements
--   Following Open/Closed Principle
+-   Avoids large if/else or switch statements
+-   Easy extension
+-   Better maintainability
 
 ------------------------------------------------------------------------
 
-## Dependency Injection Pattern
+## Dependency Injection
 
-Dependency Injection is used to provide required services.
+The project uses .NET Dependency Injection.
 
-Example:
+Providers and services are registered in `Program.cs`.
+
+Concept:
 
     NotificationSender
-            |
-            |
-    IEnumerable<INotificationProvider>
 
-Providers and loggers are registered in the .NET DI container.
+            |
+
+    INotificationProvider
 
 Benefits:
 
 -   Loose coupling
--   Better testability
--   Easier maintenance
-
-------------------------------------------------------------------------
-
-## Composite Pattern
-
-The logging system uses a composite approach.
-
-Structure:
-
-    IContentLogger
-
-           |
-    ContentLogger
-
-           |
-    ---------------------
-    |                   |
-    ConsoleLoggerProvider
-    Other Logger Provider
-
-New logging destinations can be added without changing existing code.
+-   Easier testing
+-   Cleaner architecture
 
 ------------------------------------------------------------------------
 
 ## Failover Pattern
 
-The system automatically switches to another provider when sending
-fails.
+The system supports provider failover.
 
 Example:
 
     ProviderA
 
-       X Failed
-
-          ↓
+        |
+        X
 
     ProviderB
 
-       ✓ Sent
+        |
+        OK
 
-This increases reliability of message delivery.
+If one provider fails, the next available provider is selected
+automatically.
 
 ------------------------------------------------------------------------
 
@@ -200,37 +183,38 @@ This increases reliability of message delivery.
 
 ## Single Responsibility Principle
 
-Each class has one responsibility.
+Each class has a clear responsibility.
 
-Example:
+Examples:
 
--   NotificationSender manages sending workflow
--   ContentLogger manages logging
+-   NotificationSender handles sending workflow
+-   Providers handle message sending
+-   Logger handles logging
 
 ------------------------------------------------------------------------
 
 ## Open Closed Principle
 
-The system is open for extension and closed for modification.
+New providers can be added without modifying existing sender logic.
 
-A new provider can be added by implementing:
+Example:
 
-    INotificationProvider
+    NotificationProviderD : INotificationProvider
 
-without changing existing classes.
+can be added without changing `NotificationSender`.
 
 ------------------------------------------------------------------------
 
 ## Liskov Substitution Principle
 
-All notification providers implement the same contract and can replace
+All notification providers implement the same interface and can replace
 each other.
 
 ------------------------------------------------------------------------
 
 ## Interface Segregation Principle
 
-Small focused interfaces are used:
+The project uses small focused interfaces:
 
     INotificationProvider
 
@@ -243,14 +227,14 @@ Small focused interfaces are used:
 ## Dependency Inversion Principle
 
 High-level components depend on abstractions instead of concrete
-classes.
+implementations.
 
 Example:
 
-Correct:
-
     NotificationSender
-            |
+
+            ↓
+
     INotificationProvider
 
 ------------------------------------------------------------------------
@@ -259,29 +243,10 @@ Correct:
 
 -   C#
 -   .NET 9
--   Dependency Injection
--   SOLID Principles
+-   Microsoft Dependency Injection
 
 ------------------------------------------------------------------------
 
-# Running The Project
-
-Clone the repository:
-
-    git clone <repository-url>
-
-Run:
+# Running
 
     dotnet run
-
-------------------------------------------------------------------------
-
-# UML Diagram
-
-The UML diagram is available in the project documentation.
-
-------------------------------------------------------------------------
-
-# Author
-
-Mini Notification Gateway Project
